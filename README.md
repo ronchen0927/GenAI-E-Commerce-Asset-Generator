@@ -4,16 +4,75 @@ AI-powered e-commerce product photo optimization microservice.
 
 ## Features
 
-- **Background Removal** — RMBG-1.4 (local GPU first, API fallback)
-- **Scene Generation** — Flux/SDXL for custom backgrounds
-- **Relighting** — IC-Light for lighting harmonization
-- **Async Processing** — Celery + Redis task queue
-- **Storage** — Local filesystem with GCS-ready interface
+- **Flexible Compute Architecture** — Support for zero-cost local GPU inference during development, with seamless switching to cloud APIs for high-concurrency production environments.
+- **Background Removal** — Integrates RMBG-1.4. Uses highly efficient API generation by default, while providing a lightning-fast local GPU fallback for development or on-premise servers.
+- **Instruction-based Image Editing** — Integrates FireRed-Image-Edit-1.1. Uses highly efficient API generation by default, while providing a local GGUF model deployment option for development or on-premise servers.
+- **Async Processing** — Robust background task queue built with Celery + Redis to perfectly isolate long-running AI tasks.
+- **Storage** — Local filesystem storage with a modular interface ready for seamless migration to cloud storage (e.g., GCS).
+
+## Architecture
+
+```mermaid
+flowchart TB
+    Client["🖥️ Client"]
+
+    subgraph FastAPI ["FastAPI Server"]
+        Upload["POST /api/v1/upload"]
+        Status["GET /api/v1/task-status/{id}"]
+        Result["GET /api/v1/result/{id}"]
+    end
+
+    subgraph Broker ["Message Broker"]
+        Redis[("Redis")]
+    end
+
+    subgraph Worker ["Celery Worker"]
+        Router{"Mode?"}
+        RMBG["Background Removal"]
+        FireRed["Image Editing"]
+    end
+
+    subgraph RMBG_Backend ["RMBG-1.4 Backend"]
+        RMBG_API["☁️ API"]
+        RMBG_Local["🖥️ Local GPU"]
+    end
+
+    subgraph FireRed_Backend ["FireRed Backend"]
+        FR_API["☁️ API"]
+        FR_Local["🖥️ Local GGUF"]
+    end
+
+    Storage[("📁 Storage\n(Local / GCS)")]
+
+    Client -- "Upload Image" --> Upload
+    Upload -- "Enqueue Task" --> Redis
+    Redis -- "Dispatch" --> Router
+
+    Router -- "remove_bg" --> RMBG
+    Router -- "edit" --> FireRed
+
+    RMBG -- "Try API first" --> RMBG_API
+    RMBG -. "Fallback" .-> RMBG_Local
+    FireRed -- "Try API first" --> FR_API
+    FireRed -. "Fallback" .-> FR_Local
+
+    RMBG_API --> Storage
+    RMBG_Local --> Storage
+    FR_API --> Storage
+    FR_Local --> Storage
+
+    Client -- "Poll Status" --> Status
+    Status -- "Query" --> Redis
+    Client -- "Get Result" --> Result
+    Result --> Storage
+```
 
 ## Requirements
 
 - Python 3.12+
-- NVIDIA GPU with CUDA (RTX 4070 recommended, 12GB VRAM)
+- NVIDIA GPU with CUDA
+  - **16GB+ VRAM** required for default local inference (e.g. RTX 4080, RTX 3090/4090). loading T5-XXL + FireRed Transformer + VAE takes ~15-17GB.
+  - **⚠️ Warning for 8GB~12GB VRAM:** Running the default `diffusers` code on GPUs like RTX 4070 (12GB) or RTX 2070 (8GB) will cause severe memory swapping (Shared GPU Memory) making generation take over 1-2 hours per image. For these GPUs, it is highly recommended to use the **API fallback**, integrate `bitsandbytes` (8-bit T5), or use **ComfyUI/Forge**.
 - Redis (for task queue)
 
 ## Quick Start
@@ -29,26 +88,52 @@ uv run uvicorn app.main:app --reload
 uv run celery -A app.core.celery_app worker --loglevel=info
 ```
 
-## Example Prompts
+## Processing Modes
 
-Here are some effective prompts for the `scene_prompt` parameter to get the best results for e-commerce products:
+### Mode: `remove_bg` — Background Removal Only
+
+Removes the background from a product image using RMBG-1.4, producing a transparent PNG.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@product.jpg" \
+  -F "mode=remove_bg"
+```
+
+### Mode: `edit` — Instruction-based Image Editing
+
+Uses FireRed-Image-Edit-1.1 to edit the image based on a natural language instruction.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@product.jpg" \
+  -F "mode=edit" \
+  -F "instruction=Place this product on a sleek marble table with warm studio lighting, professional product photography"
+```
+
+## Example Instructions
+
+Here are some effective instructions for the `instruction` parameter:
 
 ### Minimal & Clean (Best for Tech/Gadgets)
 
-- `professional product photography, clean white studio background, soft studio lighting, sharp focus, 8k resolution, photorealistic`
-- `product resting on a sleek black marble podium, dark studio styling, dramatic rim lighting, premium aesthetic, highly detailed`
+- `Place this product on a clean white studio background with soft studio lighting, professional product photography, sharp focus, photorealistic`
+- `Place this product on a sleek black marble podium with dark studio styling, dramatic rim lighting, premium aesthetic`
 
 ### Lifestyle & Contextual (Best for Fashion/Home)
 
-- `product placed on a cozy wooden table, blurred bright cafe background in the morning, soft warm sunlight filtering through a window, shallow depth of field`
-- `skincare bottle on a natural stone block, surrounded by subtle green palm shadows, bright airy bathroom setting, spa atmosphere, photorealistic`
+- `Place this product on a cozy wooden table with a blurred bright cafe background in the morning, soft warm sunlight filtering through a window`
+- `Place this product on a natural stone block surrounded by subtle green palm shadows, bright airy bathroom setting, spa atmosphere`
 
 ### Creative & Vibrant (Best for Cosmetics/Beverages)
 
-- `product floating in crystal clear splashing water, bright summer lighting, turquoise background, high speed photography, refreshing vibe`
-- `product surrounded by floating pastel geometric shapes, vibrant studio lighting, pop art style, clean colorful background, 4k`
+- `Place this product in crystal clear splashing water with bright summer lighting, turquoise background, high speed photography, refreshing vibe`
+- `Surround this product with floating pastel geometric shapes, vibrant studio lighting, pop art style, clean colorful background`
 
-> **Pro Tip**: Always append modifiers like `professional product photography`, `studio lighting`, or `photorealistic` to steer the model toward commercial quality.
+### Urban & Streetwear (Best for Sneakers/Footwear)
+
+- `Place this product on rough urban concrete with dramatic neon street lighting at night, puddle reflections, gritty and stylish footwear photography`
+- `Suspend this product in mid-air against a sleek metallic studio surface, dynamic angle, high-energy directional lighting, premium athletic vibe`
 
 ## API Endpoints
 
@@ -65,6 +150,7 @@ Here are some effective prompts for the `scene_prompt` parameter to get the best
 app/
 ├── api/routes.py       # FastAPI endpoints
 ├── core/
+│   ├── auth.py         # Authentication & Rate limiting
 │   ├── config.py       # Settings (pydantic-settings)
 │   └── celery_app.py   # Celery configuration
 ├── schemas/task.py     # Pydantic models
@@ -87,10 +173,13 @@ LOCAL_STORAGE_PATH=./storage
 # Redis
 REDIS_URL=redis://localhost:6379/0
 
-# AI APIs (optional, local model used by default)
+# AI APIs (optional, local model fallback used if API is unavailable/not configured)
 RMBG_API_URL=
-FLUX_API_URL=
-ICLIGHT_API_URL=
+RMBG_API_KEY=
+FIRERED_API_URL=
+FIRERED_API_KEY=
+# Path to local GGUF model file (used when API is unavailable)
+FIRERED_MODEL_PATH=
 ```
 
 ## Development

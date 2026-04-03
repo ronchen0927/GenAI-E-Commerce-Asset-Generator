@@ -5,13 +5,19 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class TaskMode(str, Enum):
+    """Processing mode for the task."""
+
+    REMOVE_BG = "remove_bg"  # Background removal only (RMBG-1.4)
+    EDIT = "edit"  # Instruction-based image editing (FireRed-Image-Edit-1.1)
+
+
 class TaskStatus(str, Enum):
     """Task processing status enum."""
 
     PENDING = "PENDING"
     REMOVING_BG = "REMOVING_BG"
-    GENERATING_SCENE = "GENERATING_SCENE"
-    RELIGHTING = "RELIGHTING"
+    EDITING = "EDITING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
@@ -19,12 +25,15 @@ class TaskStatus(str, Enum):
 class TaskCreate(BaseModel):
     """Schema for creating a new task."""
 
-    scene_prompt: Optional[str] = Field(None, description="Prompt for scene generation")
-    negative_prompt: Optional[str] = Field(
-        None, description="Negative prompt to exclude elements"
+    mode: TaskMode = Field(
+        TaskMode.EDIT, description="Processing mode: 'remove_bg' or 'edit'"
     )
-    background_color: Optional[str] = Field(
-        None, description="Hex color code for solid background (e.g. #FFFFFF)"
+    instruction: Optional[str] = Field(
+        None,
+        description=(
+            "Editing instruction for FireRed"
+            " (e.g. 'Place this product on a marble table')"
+        ),
     )
 
 

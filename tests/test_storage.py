@@ -1,6 +1,8 @@
 """Unit tests for storage service."""
-import pytest
 from pathlib import Path
+
+import pytest
+
 from app.services.storage import LocalStorage
 
 

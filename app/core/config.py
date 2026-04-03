@@ -36,10 +36,9 @@ class Settings(BaseSettings):
     # AI Service endpoints
     rmbg_api_url: str = ""
     rmbg_api_key: str = ""
-    flux_api_url: str = ""
-    flux_api_key: str = ""
-    iclight_api_url: str = ""
-    iclight_api_key: str = ""
+    firered_api_url: str = ""
+    firered_api_key: str = ""
+    firered_model_path: str = ""  # Path to local GGUF model file
     ai_api_timeout: float = 180.0
     ai_api_max_retries: int = 3
 

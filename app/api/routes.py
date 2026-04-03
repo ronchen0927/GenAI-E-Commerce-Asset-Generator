@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from app.core.celery_app import celery_app
 from app.core.config import Settings, get_settings
 from app.schemas.task import (
+    TaskMode,
     TaskResponse,
     TaskStatus,
     TaskStatusResponse,
@@ -44,19 +45,28 @@ task_metadata_store: dict[str, dict[str, Any]] = {}
 @router.post("/upload", response_model=UploadResponse)
 async def upload_image(
     file: UploadFile = File(...),
-    scene_prompt: Optional[str] = Form(None),
-    negative_prompt: Optional[str] = Form(None),
-    background_color: Optional[str] = Form(None),
+    mode: str = Form("edit"),
+    instruction: Optional[str] = Form(None),
     storage: StorageService = Depends(get_storage_service),
 ) -> UploadResponse:
     """
     Upload an image for processing.
 
-    This endpoint accepts an image file and an optional scene prompt,
-    stores the image, and queues it for AI processing.
+    This endpoint accepts an image file and processing parameters:
+    - mode: "remove_bg" for background removal, "edit" for instruction-based editing
+    - instruction: Text instruction for editing (required for mode="edit")
     """
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Validate mode
+    try:
+        TaskMode(mode)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid mode '{mode}'. Must be 'remove_bg' or 'edit'",
+        )
 
     task_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
@@ -83,15 +93,14 @@ async def upload_image(
         "created_at": now,
         "updated_at": now,
         "original_url": stored_path,
-        "scene_prompt": scene_prompt,
-        "negative_prompt": negative_prompt,
-        "background_color": background_color,
+        "mode": mode,
+        "instruction": instruction,
     }
 
     # Queue the processing task - returns Celery task ID
     celery_task = celery_app.send_task(
         "app.tasks.image_processing.process_image",
-        args=[task_id, stored_path, scene_prompt, negative_prompt, background_color],
+        args=[task_id, stored_path, mode, instruction],
         task_id=task_id,  # Use same ID for easy lookup
     )
 
@@ -180,10 +189,9 @@ def _celery_state_to_task_status(celery_state: str) -> TaskStatus:
     """Map Celery state to our TaskStatus enum."""
     state_map = {
         "PENDING": TaskStatus.PENDING,
-        "STARTED": TaskStatus.REMOVING_BG,
+        "STARTED": TaskStatus.EDITING,
         "REMOVING_BG": TaskStatus.REMOVING_BG,
-        "GENERATING_SCENE": TaskStatus.GENERATING_SCENE,
-        "RELIGHTING": TaskStatus.RELIGHTING,
+        "EDITING": TaskStatus.EDITING,
         "SUCCESS": TaskStatus.COMPLETED,
         "FAILURE": TaskStatus.FAILED,
         "REVOKED": TaskStatus.FAILED,
@@ -196,8 +204,7 @@ def _get_progress_message(status: TaskStatus) -> str:
     messages = {
         TaskStatus.PENDING: "Waiting in queue...",
         TaskStatus.REMOVING_BG: "Removing background...",
-        TaskStatus.GENERATING_SCENE: "Generating scene...",
-        TaskStatus.RELIGHTING: "Applying lighting effects...",
+        TaskStatus.EDITING: "Editing image with AI...",
         TaskStatus.COMPLETED: "Processing complete!",
         TaskStatus.FAILED: "Processing failed",
     }

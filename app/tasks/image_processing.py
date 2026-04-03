@@ -1,11 +1,9 @@
 """
 Celery tasks for image processing pipeline.
 
-This module contains the main image processing task that orchestrates
-the three-stage AI pipeline:
-1. Background Removal (RMBG-1.4)
-2. Scene Generation (Flux/SDXL)
-3. Relighting (IC-Light)
+This module contains image processing tasks that route based on mode:
+- remove_bg: Background Removal only (RMBG-1.4)
+- edit: Instruction-based image editing (FireRed-Image-Edit-1.1)
 """
 
 import asyncio
@@ -18,7 +16,7 @@ from celery import Task
 
 from app.core.celery_app import celery_app
 from app.core.config import get_settings
-from app.schemas.task import TaskStatus
+from app.schemas.task import TaskMode, TaskStatus
 from app.services.ai_service import AIServiceFactory
 from app.services.storage import GCSStorage, LocalStorage
 
@@ -39,8 +37,6 @@ class ImageProcessingTask(Task):  # type: ignore[misc]
 
     def update_task_status(self, task_id: str, status: TaskStatus) -> None:
         """Update task status in the task store."""
-        # In production, this would update Redis/DB
-        # For now, we'll use Celery's result backend
         self.update_state(state=status.value, meta={"task_id": task_id})
 
 
@@ -53,12 +49,15 @@ def process_image(
     self: ImageProcessingTask,
     task_id: str,
     image_path: str,
-    scene_prompt: Optional[str] = None,
-    negative_prompt: Optional[str] = None,
-    background_color: Optional[str] = None,
+    mode: str = "edit",
+    instruction: Optional[str] = None,
 ) -> dict[str, str]:
     """
-    Main image processing pipeline (Hybrid GCS/Local Support).
+    Main image processing task (Hybrid GCS/Local Support).
+
+    Routes based on mode:
+    - "remove_bg": Background removal only (RMBG-1.4)
+    - "edit": Instruction-based editing (FireRed-Image-Edit-1.1)
     """
     settings = get_settings()
     # Initialize storage based on the path or settings
@@ -74,48 +73,44 @@ def process_image(
     try:
         # 1. Download source image if it's remote or just copy it to temp
         if image_path.startswith("gs://") or image_path.startswith("http"):
-            # If it's gs://, image_path is just the key for GCSStorage?
-            # Or is it the full URL? Routes.py passes 'stored_path'.
-            # For GCS, upload returns 'gs://...'. Let's handle it.
             gcs_key = image_path.replace(f"gs://{settings.gcs_bucket_name}/", "")
             run_async(storage.download(gcs_key, str(local_input_path)))
         else:
-            # If local, copy to temp
             shutil.copy2(image_path, local_input_path)
 
-        # Stage 1: Background Removal
-        self.update_task_status(task_id, TaskStatus.REMOVING_BG)
-        bg_service = AIServiceFactory.get_background_removal_service()
-        local_bg_removed = run_async(bg_service.process(str(local_input_path)))
+        task_mode = TaskMode(mode)
 
-        # Stage 2: Scene Generation
-        self.update_task_status(task_id, TaskStatus.GENERATING_SCENE)
-        scene_service = AIServiceFactory.get_scene_generation_service()
-        prompt = scene_prompt or ""
-        local_scene = run_async(
-            scene_service.process(
-                local_bg_removed,
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-                background_color=background_color,
+        if task_mode == TaskMode.REMOVE_BG:
+            # --- Background Removal Only ---
+            self.update_task_status(task_id, TaskStatus.REMOVING_BG)
+            bg_service = AIServiceFactory.get_background_removal_service()
+            local_result = run_async(bg_service.process(str(local_input_path)))
+
+            # Upload result
+            result_dest_key = f"processed/{task_id}/bg_removed.png"
+            result_url = run_async(storage.upload(local_result, result_dest_key))
+
+        elif task_mode == TaskMode.EDIT:
+            # --- Instruction-based Editing (FireRed-Image-Edit-1.1) ---
+            self.update_task_status(task_id, TaskStatus.EDITING)
+            edit_service = AIServiceFactory.get_firered_edit_service()
+            edit_instruction = instruction or (
+                "professional product photography, clean white studio background, "
+                "soft studio lighting, sharp focus, photorealistic"
             )
-        )
-
-        # Stage 3: Relighting
-        self.update_task_status(task_id, TaskStatus.RELIGHTING)
-        relight_service = AIServiceFactory.get_relighting_service()
-        local_final = run_async(
-            relight_service.process(
-                local_bg_removed,
-                background_path=local_scene,
-                prompt=prompt,
-                negative_prompt=negative_prompt,
+            local_result = run_async(
+                edit_service.process(
+                    str(local_input_path),
+                    instruction=edit_instruction,
+                )
             )
-        )
 
-        # 4. Upload final result back to storage
-        final_dest_key = f"processed/{task_id}/relit.png"
-        final_result_url = run_async(storage.upload(local_final, final_dest_key))
+            # Upload result
+            result_dest_key = f"processed/{task_id}/edited.png"
+            result_url = run_async(storage.upload(local_result, result_dest_key))
+
+        else:
+            raise ValueError(f"Unknown task mode: {mode}")
 
         # Mark as completed
         self.update_task_status(task_id, TaskStatus.COMPLETED)
@@ -123,7 +118,7 @@ def process_image(
         return {
             "task_id": task_id,
             "status": TaskStatus.COMPLETED.value,
-            "result_url": final_result_url,
+            "result_url": result_url,
         }
 
     except Exception as e:
