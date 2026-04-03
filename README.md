@@ -1,16 +1,98 @@
 # Ecommerce Visual Pro
 
 AI-powered e-commerce product photo optimization microservice.
+Upload a product photo → get a professionally edited result in seconds.
 
-## Features
+## ✨ What It Does
 
-- **Flexible Compute Architecture** — Support for zero-cost local GPU inference during development, with seamless switching to cloud APIs for high-concurrency production environments.
-- **Background Removal** — Integrates RMBG-1.4. Uses highly efficient API generation by default, while providing a lightning-fast local GPU fallback for development or on-premise servers.
-- **Instruction-based Image Editing** — Integrates FireRed-Image-Edit-1.1. Uses highly efficient API generation by default, while providing a local GGUF model deployment option for development or on-premise servers.
-- **Async Processing** — Robust background task queue built with Celery + Redis to perfectly isolate long-running AI tasks.
-- **Storage** — Local filesystem storage with a modular interface ready for seamless migration to cloud storage (e.g., GCS).
+### Background Removal
 
-## Architecture
+Automatically removes the background from a product image, producing a transparent PNG.
+
+| Original | Result |
+| :---: | :---: |
+| <img src="storage/uploads/10d2d190-7406-44c1-8707-fc2b199b6aaa/original.webp" width="400" alt="Original product photo" /> | <img src="storage/processed/10d2d190-7406-44c1-8707-fc2b199b6aaa/bg_removed.png" width="400" alt="Background removed result" /> |
+
+### Instruction-based Image Editing
+
+Describe a scene in natural language and the AI places your product in it.
+
+| Original | Result |
+| :---: | :---: |
+| <img src="storage/uploads/b5fceca9-63a5-420c-83e7-0722ea078cf0/original.png" width="400" alt="Original product photo" /> | <img src="storage/processed/b5fceca9-63a5-420c-83e7-0722ea078cf0/edited.png" width="400" alt="AI edited product photo" /> |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.12+
+- Redis (for task queue)
+- NVIDIA GPU with CUDA *(optional — only needed for local AI inference, see [Compute Modes](#-flexible-compute) below)*
+
+### 1. Install & Run
+
+```bash
+# Install dependencies
+uv sync
+
+# Start the API server
+uv run uvicorn app.main:app --reload
+
+# Start the Celery worker (in a separate terminal)
+uv run celery -A app.core.celery_app worker --loglevel=info
+```
+
+### 2. Try It
+
+**Remove background:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@product.jpg" \
+  -F "mode=remove_bg"
+```
+
+**Edit with an instruction:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@product.jpg" \
+  -F "mode=edit" \
+  -F "instruction=Place this product on a sleek marble table with warm studio lighting, professional product photography"
+```
+
+### 3. Get the Result
+
+```bash
+# Poll task status
+curl http://localhost:8000/api/v1/task-status/{task_id}
+
+# Download result when completed
+curl http://localhost:8000/api/v1/result/{task_id}
+```
+
+---
+
+## 💡 Prompt Cookbook
+
+Effective `instruction` examples for the `edit` mode:
+
+| Category | Example Instruction |
+|---|---|
+| **Minimal & Clean** (Tech/Gadgets) | `Place this product on a clean white studio background with soft studio lighting, professional product photography, sharp focus, photorealistic` |
+| **Dark & Premium** (Tech/Gadgets) | `Place this product on a sleek black marble podium with dark studio styling, dramatic rim lighting, premium aesthetic` |
+| **Lifestyle** (Fashion/Home) | `Place this product on a cozy wooden table with a blurred bright cafe background in the morning, soft warm sunlight filtering through a window` |
+| **Spa & Natural** (Beauty/Home) | `Place this product on a natural stone block surrounded by subtle green palm shadows, bright airy bathroom setting, spa atmosphere` |
+| **Refreshing** (Cosmetics/Beverages) | `Place this product in crystal clear splashing water with bright summer lighting, turquoise background, high speed photography, refreshing vibe` |
+| **Pop Art** (Cosmetics/Beverages) | `Surround this product with floating pastel geometric shapes, vibrant studio lighting, pop art style, clean colorful background` |
+| **Street** (Sneakers/Footwear) | `Place this product on rough urban concrete with dramatic neon street lighting at night, puddle reflections, gritty and stylish footwear photography` |
+| **Athletic** (Sneakers/Footwear) | `Suspend this product in mid-air against a sleek metallic studio surface, dynamic angle, high-energy directional lighting, premium athletic vibe` |
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
 flowchart TB
@@ -67,75 +149,33 @@ flowchart TB
     Result --> Storage
 ```
 
-## Requirements
+### 🔌 Flexible Compute
 
-- Python 3.12+
-- NVIDIA GPU with CUDA
-  - **16GB+ VRAM** required for default local inference (e.g. RTX 4080, RTX 3090/4090). loading T5-XXL + FireRed Transformer + VAE takes ~15-17GB.
-  - **⚠️ Warning for 8GB~12GB VRAM:** Running the default `diffusers` code on GPUs like RTX 4070 (12GB) or RTX 2070 (8GB) will cause severe memory swapping (Shared GPU Memory) making generation take over 1-2 hours per image. For these GPUs, it is highly recommended to use the **API fallback**, integrate `bitsandbytes` (8-bit T5), or use **ComfyUI/Forge**.
-- Redis (for task queue)
+Both AI services follow an **API-first, local-fallback** strategy — configure via environment variables:
 
-## Quick Start
+| Service | API Mode (Default) | Local Fallback |
+|---|---|---|
+| **Background Removal** | Cloud API (fast, scalable) | RMBG-1.4 on local GPU |
+| **Image Editing** | Cloud API (fast, scalable) | FireRed-Image-Edit-1.1 GGUF on local GPU |
 
-```bash
-# Install dependencies
-uv sync
+> **💡 Tip:** Use **API mode** for production. Use **local mode** for free development/debugging without API costs.
 
-# Run development server
-uv run uvicorn app.main:app --reload
+> **⚠️ Local GPU Note:** FireRed local inference requires **16GB+ VRAM** (RTX 4080/3090/4090). On 12GB cards (RTX 4070), expect severe memory swapping and 1-2 hour generation times. For these GPUs, use the API fallback.
 
-# Run Celery worker (requires Redis)
-uv run celery -A app.core.celery_app worker --loglevel=info
-```
+### Key Features
 
-## Processing Modes
+- **Flexible Compute Architecture** — Zero-cost local GPU inference for development, cloud APIs for production.
+- **Background Removal** — RMBG-1.4 with API-first, local GPU fallback.
+- **Instruction-based Image Editing** — FireRed-Image-Edit-1.1 with API-first, local GGUF fallback.
+- **Async Processing** — Celery + Redis task queue isolates long-running AI tasks.
+- **Storage** — Local filesystem with a modular interface for GCS migration.
+- **Auth & Rate Limiting** — API Key, JWT, and configurable rate limiting (feature-flagged).
 
-### Mode: `remove_bg` — Background Removal Only
+---
 
-Removes the background from a product image using RMBG-1.4, producing a transparent PNG.
+## 📖 Reference
 
-```bash
-curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@product.jpg" \
-  -F "mode=remove_bg"
-```
-
-### Mode: `edit` — Instruction-based Image Editing
-
-Uses FireRed-Image-Edit-1.1 to edit the image based on a natural language instruction.
-
-```bash
-curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@product.jpg" \
-  -F "mode=edit" \
-  -F "instruction=Place this product on a sleek marble table with warm studio lighting, professional product photography"
-```
-
-## Example Instructions
-
-Here are some effective instructions for the `instruction` parameter:
-
-### Minimal & Clean (Best for Tech/Gadgets)
-
-- `Place this product on a clean white studio background with soft studio lighting, professional product photography, sharp focus, photorealistic`
-- `Place this product on a sleek black marble podium with dark studio styling, dramatic rim lighting, premium aesthetic`
-
-### Lifestyle & Contextual (Best for Fashion/Home)
-
-- `Place this product on a cozy wooden table with a blurred bright cafe background in the morning, soft warm sunlight filtering through a window`
-- `Place this product on a natural stone block surrounded by subtle green palm shadows, bright airy bathroom setting, spa atmosphere`
-
-### Creative & Vibrant (Best for Cosmetics/Beverages)
-
-- `Place this product in crystal clear splashing water with bright summer lighting, turquoise background, high speed photography, refreshing vibe`
-- `Surround this product with floating pastel geometric shapes, vibrant studio lighting, pop art style, clean colorful background`
-
-### Urban & Streetwear (Best for Sneakers/Footwear)
-
-- `Place this product on rough urban concrete with dramatic neon street lighting at night, puddle reflections, gritty and stylish footwear photography`
-- `Suspend this product in mid-air against a sleek metallic studio surface, dynamic angle, high-energy directional lighting, premium athletic vibe`
-
-## API Endpoints
+### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -144,7 +184,7 @@ Here are some effective instructions for the `instruction` parameter:
 | GET | `/api/v1/task-status/{id}` | Get task status |
 | GET | `/api/v1/result/{id}` | Get processing result |
 
-## Project Structure
+### Project Structure
 
 ```text
 app/
@@ -161,9 +201,9 @@ app/
 tests/                  # pytest test suite
 ```
 
-## Configuration
+### Configuration
 
-Create `.env` file:
+Create a `.env` file (see `.env.example` for all options):
 
 ```env
 # Storage
@@ -173,7 +213,7 @@ LOCAL_STORAGE_PATH=./storage
 # Redis
 REDIS_URL=redis://localhost:6379/0
 
-# AI APIs (optional, local model fallback used if API is unavailable/not configured)
+# AI APIs (optional — local model used as fallback if not configured)
 RMBG_API_URL=
 RMBG_API_KEY=
 FIRERED_API_URL=
@@ -182,7 +222,7 @@ FIRERED_API_KEY=
 FIRERED_MODEL_PATH=
 ```
 
-## Development
+### Development
 
 ```bash
 # Run tests
