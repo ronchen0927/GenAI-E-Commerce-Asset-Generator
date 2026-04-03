@@ -11,7 +11,7 @@ Automatically removes the background from a product image, producing a transpare
 
 | Original | Result |
 | :---: | :---: |
-| <img src="storage/uploads/10d2d190-7406-44c1-8707-fc2b199b6aaa/original.webp" width="400" alt="Original product photo" /> | <img src="storage/processed/10d2d190-7406-44c1-8707-fc2b199b6aaa/bg_removed.png" width="400" alt="Background removed result" /> |
+| <img width="1536" height="1536" alt="Original product photo" src="https://github.com/user-attachments/assets/3a8ba14d-21f6-45dd-9c10-f9f741f8699b" /> | <img width="1536" height="1536" alt="Background removed result" src="https://github.com/user-attachments/assets/79feaf77-a0c3-4458-bfc4-4d00ba1ba273" /> |
 
 ### Instruction-based Image Editing
 
@@ -19,7 +19,7 @@ Describe a scene in natural language and the AI places your product in it.
 
 | Original | Result |
 | :---: | :---: |
-| <img src="storage/uploads/b5fceca9-63a5-420c-83e7-0722ea078cf0/original.png" width="400" alt="Original product photo" /> | <img src="storage/processed/b5fceca9-63a5-420c-83e7-0722ea078cf0/edited.png" width="400" alt="AI edited product photo" /> |
+| <img width="600" height="400" alt="image" src="https://github.com/user-attachments/assets/da303032-8f99-4000-8fc4-dfe5a9c4dd73" /> | <img width="576" height="384" alt="image" src="https://github.com/user-attachments/assets/9ad254f3-260c-4c40-8ef8-6f00b9da7fda" /> |
 
 ---
 
