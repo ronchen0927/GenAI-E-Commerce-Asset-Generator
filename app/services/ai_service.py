@@ -587,7 +587,8 @@ class FireRedEditService(AIService):
             input={"image": img_byte_arr, "prompt": instruction},
         )
 
-        # Output from this model is typically a single URL string or a list containing one URL
+        # Output from this model is typically a single URL string
+        # or a list containing one URL
         if isinstance(output_url, list) and len(output_url) > 0:
             output_url = str(output_url[0])
         else:

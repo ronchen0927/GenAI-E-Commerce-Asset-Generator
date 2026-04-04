@@ -1,0 +1,65 @@
+# Cloud Run Service declarative config (IaC)
+#
+# Apply with:
+#   gcloud run services replace deploy/cloudrun-service.yaml --region=asia-east1
+#
+# This is a declarative specification of the Cloud Run service.
+# It can be version-controlled and applied idempotently.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ecommerce-visual-pro
+  labels:
+    app: ecommerce-visual-pro
+    managed-by: cloud-run
+  annotations:
+    run.googleapis.com/description: "AI-powered e-commerce product photo optimization"
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Auto-scaling settings
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        # CPU is only allocated during request processing (cost optimization)
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: ""  # Uses default compute service account
+      containers:
+        - image: asia-east1-docker.pkg.dev/PROJECT_ID/cloud-run-source-deploy/ecommerce-visual-pro:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: "1"
+          env:
+            - name: STORAGE_TYPE
+              value: "local"
+            - name: AUTH_ENABLED
+              value: "true"
+            - name: RATE_LIMIT_ENABLED
+              value: "true"
+            - name: REPLICATE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: replicate-api-token
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 30

@@ -1,0 +1,55 @@
+# Google Cloud Build — build container and deploy to Cloud Run
+#
+# Usage:
+#   gcloud builds submit --config deploy/cloudbuild.yaml \
+#     --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+#
+# Required IAM roles on Cloud Build service account:
+#   - roles/run.admin
+#   - roles/iam.serviceAccountUser
+
+substitutions:
+  _REGION: asia-east1
+  _SERVICE_NAME: ecommerce-visual-pro
+
+steps:
+  # Step 1: Build the Docker image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:latest
+      - .
+
+  # Step 2: Push to Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}
+
+  # Step 3: Deploy to Cloud Run
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --memory=1Gi
+      - --cpu=1
+      - --timeout=300s
+      - --max-instances=3
+      - --set-env-vars=STORAGE_TYPE=local,AUTH_ENABLED=true,RATE_LIMIT_ENABLED=true
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY

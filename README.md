@@ -177,13 +177,90 @@ Both AI services follow an **API-first, local-fallback** strategy — configure 
 
 ---
 
+## 🔄 CI/CD
+
+Every push to `main` and every pull request triggers a **3-stage GitHub Actions pipeline**:
+
+```text
+Lint & Type Check  →  Unit Tests  →  Docker Build
+  (ruff, mypy)        (pytest)       (buildx, cached)
+```
+
+```mermaid
+flowchart LR
+    Push["Push / PR"] --> Lint["🔍 Lint & Type Check"]
+    Lint --> Test["🧪 Unit Tests"]
+    Test --> Docker["🐳 Docker Build"]
+    Docker --> Deploy["🚀 Cloud Build\n(manual trigger)"]
+    Deploy --> CloudRun["☁️ Cloud Run"]
+```
+
+> **See:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+### Deployment
+
+Production deployment uses **Google Cloud Build** → **Cloud Run**:
+
+```bash
+# Deploy to Cloud Run (from local or CI)
+gcloud builds submit --config deploy/cloudbuild.yaml \
+  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+
+# Or apply the declarative service config directly
+gcloud run services replace deploy/cloudrun-service.yaml --region=asia-east1
+```
+
+> **See:** [`deploy/cloudbuild.yaml`](deploy/cloudbuild.yaml) · [`deploy/cloudrun-service.yaml`](deploy/cloudrun-service.yaml)
+
+---
+
+## 📊 Monitoring & Observability
+
+### Structured Logging
+
+The application uses Python's `logging` module with structured output. In Cloud Run, logs are automatically ingested into **Cloud Logging** and correlated with request traces.
+
+| Log Source | What It Captures |
+|---|---|
+| `app.main` | Application lifecycle, middleware events |
+| `app.services.ai_service` | Model load times, inference parameters, API fallback events |
+| `app.tasks` | Celery task start/complete/fail, processing duration |
+| `app.core.auth` | Auth failures, rate limit hits |
+
+### Health & Readiness
+
+| Endpoint | Purpose | Used By |
+|---|---|---|
+| `GET /health` | Liveness check — returns `{"status": "healthy"}` | Cloud Run, Docker HEALTHCHECK, uptime monitors |
+
+### Key Metrics to Monitor (Cloud Run)
+
+| Metric | Why It Matters |
+|---|---|
+| **Request latency (p50/p95/p99)** | AI inference can spike — track tail latency |
+| **Container instance count** | Auto-scaling behavior; correlate with traffic |
+| **Memory utilization** | AI models are memory-heavy; detect OOM risk |
+| **Celery queue depth** | If queue grows unbounded, workers can't keep up |
+| **Error rate (5xx)** | API fallback failures, model load errors |
+
+### Alerting Strategy
+
+```text
+🔴 Critical:  Error rate > 5% for 5 min  →  PagerDuty / Slack
+🟡 Warning:   p95 latency > 30s          →  Slack
+🟡 Warning:   Memory > 80%               →  Slack
+🔵 Info:      Deployment completed        →  Slack
+```
+
+---
+
 ## 📖 Reference
 
 ### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check |
+| GET | `/health` | Health / liveness check |
 | POST | `/api/v1/upload` | Upload image for processing |
 | GET | `/api/v1/task-status/{id}` | Get task status |
 | GET | `/api/v1/result/{id}` | Get processing result |
@@ -192,17 +269,22 @@ Both AI services follow an **API-first, local-fallback** strategy — configure 
 
 ```text
 app/
-├── api/routes.py       # FastAPI endpoints
+├── api/routes.py            # FastAPI endpoints
 ├── core/
-│   ├── auth.py         # Authentication & Rate limiting
-│   ├── config.py       # Settings (pydantic-settings)
-│   └── celery_app.py   # Celery configuration
-├── schemas/task.py     # Pydantic models
+│   ├── auth.py              # Authentication & Rate limiting
+│   ├── config.py            # Settings (pydantic-settings)
+│   └── celery_app.py        # Celery configuration
+├── schemas/task.py          # Pydantic models
 ├── services/
-│   ├── ai_service.py   # AI model integrations
-│   └── storage.py      # Storage service
-└── tasks/              # Celery tasks
-tests/                  # pytest test suite
+│   ├── ai_service.py        # AI model integrations
+│   └── storage.py           # Storage service
+└── tasks/                   # Celery tasks
+tests/                       # pytest test suite
+deploy/
+├── cloudbuild.yaml          # Cloud Build pipeline (build → push → deploy)
+└── cloudrun-service.yaml    # Cloud Run declarative service config (IaC)
+.github/workflows/
+└── ci.yml                   # GitHub Actions CI (lint → test → docker build)
 ```
 
 ### Configuration
