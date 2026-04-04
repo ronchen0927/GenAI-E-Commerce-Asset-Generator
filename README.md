@@ -159,8 +159,8 @@ Both AI services follow an **API-first, local-fallback** strategy — configure 
 
 | Service | API Mode (Default) | Local Fallback |
 |---|---|---|
-| **Background Removal** | Cloud API (fast, scalable) | RMBG-1.4 on local GPU |
-| **Image Editing** | Cloud API (fast, scalable) | FireRed-Image-Edit-1.1 GGUF on local GPU |
+| **Background Removal** | Replicate API / Custom Cloud API | RMBG-1.4 on local GPU |
+| **Image Editing** | Replicate API / Custom Cloud API | FireRed-Image-Edit-1.1 GGUF on local GPU |
 
 > **💡 Tip:** Use **API mode** for production. Use **local mode** for free development/debugging without API costs.
 
@@ -300,6 +300,10 @@ LOCAL_STORAGE_PATH=./storage
 REDIS_URL=redis://localhost:6379/0
 
 # AI APIs (optional — local model used as fallback if not configured)
+# Replicate API (Recommended for production, handles both models)
+REPLICATE_API_TOKEN=
+
+# Custom API Endpoints (Fallback if Replicate applies differently)
 RMBG_API_URL=
 RMBG_API_KEY=
 FIRERED_API_URL=
