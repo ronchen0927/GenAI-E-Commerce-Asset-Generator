@@ -148,12 +148,14 @@ class GCSStorage(StorageService):
 
     async def upload(self, file_path: str, destination_path: str) -> str:
         """Upload file to GCS bucket."""
+        assert self._bucket is not None
         blob = self._bucket.blob(destination_path)
         blob.upload_from_filename(file_path)
         return f"gs://{self.bucket_name}/{destination_path}"
 
     async def download(self, source_path: str, destination_path: str) -> None:
         """Download file from GCS bucket."""
+        assert self._bucket is not None
         blob = self._bucket.blob(source_path)
         if not blob.exists():
             raise FileNotFoundError(f"File not found in GCS: {source_path}")
@@ -177,8 +179,9 @@ class GCSStorage(StorageService):
         Returns:
             Signed URL string.
         """
+        assert self._bucket is not None
         blob = self._bucket.blob(path)
-        url = blob.generate_signed_url(
+        url: str = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(minutes=expiration_minutes),
             method=method,
@@ -187,14 +190,17 @@ class GCSStorage(StorageService):
 
     async def delete(self, path: str) -> None:
         """Delete file from GCS bucket."""
+        assert self._bucket is not None
         blob = self._bucket.blob(path)
         if blob.exists():
             blob.delete()
 
     async def exists(self, path: str) -> bool:
         """Check if file exists in GCS bucket."""
+        assert self._bucket is not None
         blob = self._bucket.blob(path)
-        return blob.exists()
+        result: bool = blob.exists()
+        return result
 
     def list_files(self, prefix: str = "") -> list[str]:
         """
@@ -206,5 +212,6 @@ class GCSStorage(StorageService):
         Returns:
             List of file paths.
         """
+        assert self._client is not None
         blobs = self._client.list_blobs(self.bucket_name, prefix=prefix)
         return [blob.name for blob in blobs]

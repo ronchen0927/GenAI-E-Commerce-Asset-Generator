@@ -17,8 +17,8 @@ class TestTaskMode:
 
     def test_mode_values(self) -> None:
         """Test all mode values exist."""
-        assert TaskMode.REMOVE_BG == "remove_bg"
-        assert TaskMode.EDIT == "edit"
+        assert TaskMode.REMOVE_BG.value == "remove_bg"
+        assert TaskMode.EDIT.value == "edit"
 
     def test_mode_count(self) -> None:
         """Test correct number of modes."""
@@ -55,13 +55,13 @@ class TestTaskCreate:
 
     def test_create_remove_bg_mode(self) -> None:
         """Test creating task with remove_bg mode."""
-        task = TaskCreate(mode=TaskMode.REMOVE_BG)
+        task = TaskCreate(mode=TaskMode.REMOVE_BG, instruction=None)
         assert task.mode == TaskMode.REMOVE_BG
         assert task.instruction is None
 
     def test_create_defaults(self) -> None:
         """Test creating task with defaults."""
-        task = TaskCreate()
+        task = TaskCreate(mode=TaskMode.EDIT, instruction=None)
         assert task.mode == TaskMode.EDIT
         assert task.instruction is None
 

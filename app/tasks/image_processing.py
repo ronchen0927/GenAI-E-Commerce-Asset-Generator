@@ -18,7 +18,7 @@ from app.core.celery_app import celery_app
 from app.core.config import get_settings
 from app.schemas.task import TaskMode, TaskStatus
 from app.services.ai_service import AIServiceFactory
-from app.services.storage import GCSStorage, LocalStorage
+from app.services.storage import GCSStorage, LocalStorage, StorageService
 
 T = TypeVar("T")
 
@@ -60,7 +60,7 @@ def process_image(
     - "edit": Instruction-based editing (FireRed-Image-Edit-1.1)
     """
     settings = get_settings()
-    # Initialize storage based on the path or settings
+    storage: StorageService
     if image_path.startswith("gs://") or settings.storage_type == "gcs":
         storage = GCSStorage(bucket_name=settings.gcs_bucket_name)
     else:

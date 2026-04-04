@@ -100,14 +100,14 @@ def _load_rmbg_model() -> tuple[Any, Any]:
 
     import transformers.models.auto.auto_factory as _af  # noqa: PLC0415
 
-    _orig_gcfdm = _af.get_class_from_dynamic_module
+    _orig_gcfdm = _af.get_class_from_dynamic_module  # type: ignore[attr-defined]
 
-    def _patched_gcfdm(class_reference, pretrained_model_name_or_path, **kwargs):
+    def _patched_gcfdm(class_reference: Any, pretrained_model_name_or_path: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         cls = _orig_gcfdm(class_reference, pretrained_model_name_or_path, **kwargs)
         try:
             if getattr(cls, "__name__", None) == "BriaRMBG":
                 if "all_tied_weights_keys" not in cls.__dict__:
-                    cls.all_tied_weights_keys = property(lambda self: {})
+                    cls.all_tied_weights_keys = property(lambda self: {})  # type: ignore[attr-defined]
                     logger.debug(
                         "Patched BriaRMBG.all_tied_weights_keys for transformers 5.x"
                     )
@@ -115,13 +115,13 @@ def _load_rmbg_model() -> tuple[Any, Any]:
             logger.warning(f"BriaRMBG patch failed inside loader: {_patch_err}")
         return cls
 
-    _af.get_class_from_dynamic_module = _patched_gcfdm
+    _af.get_class_from_dynamic_module = _patched_gcfdm  # type: ignore[attr-defined, assignment]
     try:
         _rmbg_model = AutoModelForImageSegmentation.from_pretrained(
             "briaai/RMBG-1.4", trust_remote_code=True
         )
     finally:
-        _af.get_class_from_dynamic_module = _orig_gcfdm  # always restore
+        _af.get_class_from_dynamic_module = _orig_gcfdm  # type: ignore[attr-defined]  # always restore
 
     # `all_tied_weights_keys` is an *instance attribute* (a {target: source} dict)
     # set by PreTrainedModel.__init__ via get_expanded_tied_weights_keys().
