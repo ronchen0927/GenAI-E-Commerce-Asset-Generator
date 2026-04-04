@@ -41,7 +41,11 @@ uv sync
 uv run uvicorn app.main:app --reload
 
 # Start the Celery worker (in a separate terminal)
+# On Linux/macOS (Cloud/Production):
 uv run celery -A app.core.celery_app worker --loglevel=info
+
+# On Windows (Local Demo):
+uv run celery -A app.core.celery_app worker --pool=solo --loglevel=info
 ```
 
 ### 2. Try It
