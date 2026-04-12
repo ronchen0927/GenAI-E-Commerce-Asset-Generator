@@ -269,6 +269,7 @@ class BackgroundRemovalService(AIService):
     async def _process_local_model(self, image_path: str) -> str:
         """Process using local RMBG-1.4 model on GPU."""
         import torch
+
         model, device = _load_rmbg_model()
 
         orig_im = skimage_io.imread(image_path)
@@ -303,6 +304,7 @@ class BackgroundRemovalService(AIService):
         import torch
         import torch.nn.functional as F
         from torchvision.transforms.functional import normalize
+
         if len(im.shape) < 3:
             im = im[:, :, np.newaxis]
         im_tensor = torch.tensor(im, dtype=torch.float32).permute(2, 0, 1)
@@ -321,6 +323,7 @@ class BackgroundRemovalService(AIService):
         """Postprocess model output to get mask."""
         import torch
         import torch.nn.functional as F
+
         if result.dim() == 3:
             result = result.unsqueeze(0)
         result = F.interpolate(
@@ -478,6 +481,7 @@ class FireRedEditService(AIService):
         - prompt: the editing instruction
         """
         import torch
+
         pipe, device = _load_firered_model()
 
         # Load and prepare input image
