@@ -9,9 +9,9 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: ecommerce-visual-pro
+  name: ecommerce-asset-generator
   labels:
-    app: ecommerce-visual-pro
+    app: ecommerce-asset-generator
     managed-by: cloud-run
   annotations:
     run.googleapis.com/description: "AI-powered e-commerce product photo optimization"
@@ -32,7 +32,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ""  # Uses default compute service account
       containers:
-        - image: asia-east1-docker.pkg.dev/PROJECT_ID/cloud-run-source-deploy/ecommerce-visual-pro:latest
+        - image: asia-east1-docker.pkg.dev/ecommerce-visual-pro/cloud-run-source-deploy/ecommerce-asset-generator:latest
           ports:
             - containerPort: 8000
           resources:
@@ -40,17 +40,33 @@ spec:
               memory: 1Gi
               cpu: "1"
           env:
-            - name: STORAGE_TYPE
-              value: "local"
-            - name: AUTH_ENABLED
-              value: "true"
-            - name: RATE_LIMIT_ENABLED
-              value: "true"
             - name: REPLICATE_API_TOKEN
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: replicate-api-token
+                  name: replicate-token
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: celery-broker-url
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: celery-broker-url
+            - name: STORAGE_TYPE
+              value: "gcs"
+            - name: GCS_BUCKET_NAME
+              value: "ecommerce-visual-pro-assets"
+            - name: GCS_PROJECT_ID
+              value: "ecommerce-visual-pro"
+            - name: AUTH_ENABLED
+              value: "true"
+            - name: RATE_LIMIT_ENABLED
+              value: "true"
+            - name: API_KEYS
+              value: "ecommerce-demo-key-2026"
           startupProbe:
             httpGet:
               path: /health

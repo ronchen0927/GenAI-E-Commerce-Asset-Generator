@@ -1,8 +1,10 @@
 # Google Cloud Build — build container and deploy to Cloud Run
 #
-# Usage:
-#   gcloud builds submit --config deploy/cloudbuild.yaml \
-#     --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+# Usage (local):
+#   gcloud builds submit --config deploy/cloudbuild.yaml
+#
+# Usage (with specific tag):
+#   gcloud builds submit --config deploy/cloudbuild.yaml "--substitutions=_TAG=abc1234"
 #
 # Required IAM roles on Cloud Build service account:
 #   - roles/run.admin
@@ -10,7 +12,8 @@
 
 substitutions:
   _REGION: asia-east1
-  _SERVICE_NAME: ecommerce-visual-pro
+  _SERVICE_NAME: ecommerce-asset-generator
+  _TAG: latest  # Overridden by CI trigger with SHORT_SHA
 
 steps:
   # Step 1: Build the Docker image
@@ -18,7 +21,7 @@ steps:
     args:
       - build
       - -t
-      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${_TAG}
       - -t
       - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:latest
       - .
@@ -37,7 +40,7 @@ steps:
       - run
       - deploy
       - ${_SERVICE_NAME}
-      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${_TAG}
       - --region=${_REGION}
       - --platform=managed
       - --allow-unauthenticated
@@ -45,10 +48,11 @@ steps:
       - --cpu=1
       - --timeout=300s
       - --max-instances=3
-      - --set-env-vars=STORAGE_TYPE=local,AUTH_ENABLED=true,RATE_LIMIT_ENABLED=true
+      - --set-env-vars=STORAGE_TYPE=gcs,GCS_BUCKET_NAME=ecommerce-visual-pro-assets,GCS_PROJECT_ID=${PROJECT_ID},AUTH_ENABLED=true,RATE_LIMIT_ENABLED=true,API_KEYS=ecommerce-demo-key-2026
+      - --set-secrets=REPLICATE_API_TOKEN=replicate-token:latest,CELERY_BROKER_URL=celery-broker-url:latest,CELERY_RESULT_BACKEND=celery-broker-url:latest
 
 images:
-  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${SHORT_SHA}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:${_TAG}
   - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}:latest
 
 options:

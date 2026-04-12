@@ -41,7 +41,39 @@ def create_app() -> FastAPI:
         description="AI-powered e-commerce product photo optimization service",
         version="0.1.0",
         lifespan=lifespan,
+        # Let Swagger UI know this API uses X-API-Key header authentication
+        openapi_tags=[
+            {"name": "images", "description": "Image processing endpoints"},
+            {"name": "health", "description": "Health check"},
+        ],
     )
+
+    # Inject the API Key security scheme into the OpenAPI schema so
+    # Swagger UI renders the 🔒 "Authorize" button.
+    def custom_openapi() -> dict:  # type: ignore[return]
+        if app.openapi_schema:
+            return app.openapi_schema
+        from fastapi.openapi.utils import get_openapi
+
+        schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
+        schema.setdefault("components", {}).setdefault("securitySchemes", {})[
+            "ApiKeyAuth"
+        ] = {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+        }
+        # Apply the scheme globally to every endpoint
+        schema["security"] = [{"ApiKeyAuth": []}]
+        app.openapi_schema = schema
+        return app.openapi_schema
+
+    app.openapi = custom_openapi  # type: ignore[method-assign]
 
     # CORS middleware
     app.add_middleware(
