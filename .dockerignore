@@ -9,5 +9,22 @@
 !app/
 !app/**/*.py
 
-# Ignore pycache even if allowed
+# Ignore pycache and python bytecodes
 **/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Explicitly ignore large AI models/weights to prevent Artifact Registry bloat
+**/*.gguf
+**/*.pt
+**/*.pth
+**/*.bin
+**/*.safetensors
+**/*.onnx
+
+# Ignore environments and logs
+.env
+.venv/
+logs/
+storage/

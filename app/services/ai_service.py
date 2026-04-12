@@ -16,13 +16,9 @@ from typing import Any, Optional
 # Third-party imports
 import httpx
 import numpy as np
-import torch
-import torch.nn.functional as F
 from PIL import Image
 from pydantic import BaseModel, ConfigDict
 from skimage import io as skimage_io
-from torchvision.transforms.functional import normalize
-from transformers import AutoModelForImageSegmentation
 
 # Local imports
 from app.core.config import get_settings
@@ -71,6 +67,8 @@ def _load_rmbg_model() -> tuple[Any, Any]:
         Tuple of (model, device)
     """
     global _rmbg_model, _torch_device
+    import torch
+    from transformers import AutoModelForImageSegmentation
 
     if _rmbg_model is not None:
         return _rmbg_model, _torch_device
@@ -154,6 +152,7 @@ def _load_firered_model() -> tuple[Any, Any]:
         Tuple of (pipeline, device)
     """
     global _firered_pipe, _firered_device
+    import torch
 
     if _firered_pipe is not None:
         return _firered_pipe, _firered_device
@@ -269,6 +268,7 @@ class BackgroundRemovalService(AIService):
 
     async def _process_local_model(self, image_path: str) -> str:
         """Process using local RMBG-1.4 model on GPU."""
+        import torch
         model, device = _load_rmbg_model()
 
         orig_im = skimage_io.imread(image_path)
@@ -298,8 +298,11 @@ class BackgroundRemovalService(AIService):
         self,
         im: np.ndarray,
         model_input_size: list[int],
-    ) -> torch.Tensor:
+    ) -> Any:
         """Preprocess image for RMBG-1.4 model."""
+        import torch
+        import torch.nn.functional as F
+        from torchvision.transforms.functional import normalize
         if len(im.shape) < 3:
             im = im[:, :, np.newaxis]
         im_tensor = torch.tensor(im, dtype=torch.float32).permute(2, 0, 1)
@@ -312,10 +315,12 @@ class BackgroundRemovalService(AIService):
 
     def _postprocess_mask(
         self,
-        result: torch.Tensor,
+        result: Any,
         im_size: tuple[int, int],
     ) -> np.ndarray:
         """Postprocess model output to get mask."""
+        import torch
+        import torch.nn.functional as F
         if result.dim() == 3:
             result = result.unsqueeze(0)
         result = F.interpolate(
@@ -459,7 +464,6 @@ class FireRedEditService(AIService):
             "FireRed image editing unavailable: no API and local model disabled"
         )
 
-    @torch.inference_mode()
     async def _process_local_model(
         self,
         image_path: str,
@@ -473,6 +477,7 @@ class FireRedEditService(AIService):
         - mask_image: an all-white mask (edit the entire image)
         - prompt: the editing instruction
         """
+        import torch
         pipe, device = _load_firered_model()
 
         # Load and prepare input image
@@ -500,15 +505,16 @@ class FireRedEditService(AIService):
         )
 
         # Run the pipeline
-        result = pipe(
-            image=source_img,
-            prompt=instruction,
-            height=new_h,
-            width=new_w,
-            num_inference_steps=28,
-            guidance_scale=30.0,
-            generator=generator,
-        )
+        with torch.inference_mode():
+            result = pipe(
+                image=source_img,
+                prompt=instruction,
+                height=new_h,
+                width=new_w,
+                num_inference_steps=28,
+                guidance_scale=30.0,
+                generator=generator,
+            )
 
         output_image = result.images[0]
 

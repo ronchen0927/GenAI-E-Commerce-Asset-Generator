@@ -9,8 +9,11 @@ WORKDIR /app
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies
-RUN uv sync --frozen --no-dev --no-install-project
+# Strip out local ML models (PyTorch, Diffusers, HuggingFace) entirely for production API usage.
+# This prevents downloading any massive ML binaries, slashing the image size to ~0.2GB!
+RUN sed -i -E '/"(torch|transformers|torchvision|diffusers|safetensors|accelerate|huggingface-hub|gguf|sentencepiece).*"/d' pyproject.toml && \
+    uv lock && \
+    uv sync --no-dev --no-install-project
 
 # Production stage
 FROM python:3.12-slim AS production
