@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import logging
+import mimetypes
 
 from openai import OpenAI
 
@@ -114,7 +115,7 @@ _TEMPLATE_SCENES = [
 
 class StoryboardService:
     def __init__(self, api_key: str) -> None:
-        self._api_key = api_key
+        self._client = OpenAI(api_key=api_key)
 
     async def generate(
         self,
@@ -124,7 +125,7 @@ class StoryboardService:
         num_scenes: int,
     ) -> StoryboardResponse:
         try:
-            return await asyncio.get_event_loop().run_in_executor(
+            return await asyncio.get_running_loop().run_in_executor(
                 None,
                 self._generate_sync,
                 image_path,
@@ -148,8 +149,10 @@ class StoryboardService:
         with open(image_path, "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-        client = OpenAI(api_key=self._api_key)
-        response = client.chat.completions.create(
+        mime, _ = mimetypes.guess_type(image_path)
+        mime = mime or "image/png"
+
+        response = self._client.chat.completions.create(
             model="gpt-4o",
             response_format={"type": "json_object"},
             messages=[
@@ -160,7 +163,7 @@ class StoryboardService:
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/png;base64,{img_b64}"
+                                "url": f"data:{mime};base64,{img_b64}"
                             },
                         },
                         {
