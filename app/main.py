@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,7 +52,7 @@ def create_app() -> FastAPI:
 
     # Inject the API Key security scheme into the OpenAPI schema so
     # Swagger UI renders the 🔒 "Authorize" button.
-    def custom_openapi() -> dict:  # type: ignore[return]
+    def custom_openapi() -> dict[str, Any]:
         if app.openapi_schema:
             return app.openapi_schema
         from fastapi.openapi.utils import get_openapi

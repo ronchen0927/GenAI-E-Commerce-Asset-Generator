@@ -1,5 +1,6 @@
 """Unit tests for StoryboardService."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +11,7 @@ from app.services.storyboard_service import StoryboardService
 
 
 @pytest.fixture
-def sample_image_path(tmp_path: pytest.TempPathFactory) -> str:
+def sample_image_path(tmp_path: Path) -> str:
     img = Image.new("RGB", (100, 100), color="blue")
     path = tmp_path / "product.png"
     img.save(str(path))

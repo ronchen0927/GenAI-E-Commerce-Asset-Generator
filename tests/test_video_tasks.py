@@ -1,13 +1,14 @@
 """Unit tests for video Celery task."""
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
 @pytest.fixture
-def scenes() -> list[dict]:
+def scenes() -> list[dict[str, Any]]:
     return [
         {
             "id": 1,
@@ -30,7 +31,7 @@ def scenes() -> list[dict]:
 
 class TestProcessVideoAsync:
     @pytest.mark.asyncio
-    async def test_all_clips_succeed(self, scenes: list[dict], tmp_path: Path) -> None:
+    async def test_all_clips_succeed(self, scenes: list[dict[str, Any]], tmp_path: Path) -> None:
         image_path = str(tmp_path / "product.png")
         Path(image_path).write_bytes(b"fake_image")
 
@@ -74,7 +75,7 @@ class TestProcessVideoAsync:
 
     @pytest.mark.asyncio
     async def test_partial_clip_failure(
-        self, scenes: list[dict], tmp_path: Path
+        self, scenes: list[dict[str, Any]], tmp_path: Path
     ) -> None:
         image_path = str(tmp_path / "product.png")
         Path(image_path).write_bytes(b"fake_image")
