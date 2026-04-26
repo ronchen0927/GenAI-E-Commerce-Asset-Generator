@@ -35,17 +35,28 @@ curl -X POST http://localhost:8000/api/v1/video/storyboard \
   -F "style=cinematic" \
   -F "num_scenes=3"
 
-# Step 2 — start video generation (paste scenes from Step 1 response)
+# Step 2 — pass the Step 1 response directly (extra fields are accepted and ignored)
 curl -X POST http://localhost:8000/api/v1/video/generate \
   -H "Content-Type: application/json" \
-  -d '{
-    "image_path": "uploads/<id>/original.jpg",
-    "scenes": [...]
-  }'
+  -d '<paste Step 1 JSON response here>'
 
 # Poll status
 curl http://localhost:8000/api/v1/video/status/<task_id>
 ```
+
+#### 🎬 Video Style Cookbook
+
+The `style` field is passed to GPT-5.4-mini as creative direction. Recommended values:
+
+| Style | Best For | Description |
+|---|---|---|
+| `cinematic` | All categories | Dramatic film-like shots, dynamic camera movements, rich depth of field |
+| `minimal` | Tech / Gadgets / Beauty | Clean white background, extreme close-ups, product-only focus |
+| `luxury` | Watches / Jewellery / Spirits | Dark backgrounds, rim lighting, slow reveals, premium aesthetic |
+| `lifestyle` | Home / Fashion / Food | Product in real-world settings — desk, kitchen, outdoor |
+| `dynamic` | Sports / Sneakers / Energy drinks | Fast-paced motion, energetic reveals, high-contrast lighting |
+| `nature` | Skincare / Organic / Beverages | Natural materials, soft outdoor lighting, earthy tones |
+| `editorial` | Fashion / Cosmetics | High-fashion magazine composition, artistic framing, bold colour |
 
 ---
 
