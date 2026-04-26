@@ -10,7 +10,7 @@ celery_app = Celery(
     "ecommerce_visual_pro",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["app.tasks.image_processing"],
+    include=["app.tasks.image_processing", "app.tasks.video_processing"],
 )
 
 celery_app.conf.update(
