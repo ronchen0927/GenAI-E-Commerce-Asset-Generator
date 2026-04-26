@@ -94,7 +94,7 @@ class VideoService:
                     capture_output=True,
                 )
             except subprocess.CalledProcessError as e:
-                stderr = e.stderr.decode() if e.stderr else ""
+                stderr = e.stderr.decode(errors="replace") if e.stderr else ""
                 raise VideoServiceError(f"FFmpeg concatenation failed: {stderr}") from e
         finally:
             Path(filelist.name).unlink(missing_ok=True)
