@@ -134,7 +134,9 @@ class StoryboardService:
                 num_scenes,
             )
         except Exception as e:
-            logger.warning(f"GPT-5.4-mini storyboard generation failed, using template: {e}")
+            logger.warning(
+                f"GPT-5.4-mini storyboard generation failed, using template: {e}"
+            )
             return self._template_storyboard(image_storage_path, style, num_scenes)
 
     def _generate_sync(
