@@ -78,9 +78,7 @@ class TestStoryboardEndpoint:
         assert "image_path" in data
         assert data["source"] in ("ai", "template")
 
-    def test_storyboard_rejects_non_image(
-        self, client: TestClient
-    ) -> None:
+    def test_storyboard_rejects_non_image(self, client: TestClient) -> None:
         response = client.post(
             "/api/v1/video/storyboard",
             files={"image": ("file.txt", b"not an image", "text/plain")},

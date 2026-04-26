@@ -26,6 +26,7 @@ def sample_scene() -> VideoScene:
 @pytest.fixture
 def sample_image_path(tmp_path: Path) -> str:
     from PIL import Image
+
     img = Image.new("RGB", (100, 100), color="red")
     path = tmp_path / "product.png"
     img.save(str(path))
@@ -124,9 +125,7 @@ class TestConcatenateClips:
         assert "-f" in call_args
         assert "concat" in call_args
 
-    def test_concatenate_raises_on_ffmpeg_error(
-        self, tmp_path: Path
-    ) -> None:
+    def test_concatenate_raises_on_ffmpeg_error(self, tmp_path: Path) -> None:
         clip_paths = [str(tmp_path / "clip_00.mp4")]
         Path(clip_paths[0]).write_bytes(b"fake")
         output_path = str(tmp_path / "final.mp4")

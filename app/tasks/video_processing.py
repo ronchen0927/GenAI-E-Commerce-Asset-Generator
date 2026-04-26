@@ -135,9 +135,7 @@ def process_video(
     check result["status"] in addition to AsyncResult.state to detect failures.
     """
     try:
-        return asyncio.run(
-            _process_video_async(self, task_id, image_path, scenes_data)
-        )
+        return asyncio.run(_process_video_async(self, task_id, image_path, scenes_data))
     except Exception as e:
         error_msg = f"{str(e)}\n{traceback.format_exc()}"
         self.update_state(state="FAILURE", meta={"error": error_msg})

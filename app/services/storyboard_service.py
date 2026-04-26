@@ -134,9 +134,7 @@ class StoryboardService:
                 num_scenes,
             )
         except Exception as e:
-            logger.warning(
-                f"GPT-4o storyboard generation failed, using template: {e}"
-            )
+            logger.warning(f"GPT-4o storyboard generation failed, using template: {e}")
             return self._template_storyboard(image_storage_path, style, num_scenes)
 
     def _generate_sync(
@@ -162,9 +160,7 @@ class StoryboardService:
                     "content": [
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime};base64,{img_b64}"
-                            },
+                            "image_url": {"url": f"data:{mime};base64,{img_b64}"},
                         },
                         {
                             "type": "text",

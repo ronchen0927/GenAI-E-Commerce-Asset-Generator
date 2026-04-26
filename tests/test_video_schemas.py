@@ -1,4 +1,5 @@
 """Tests for video Pydantic schemas."""
+
 from app.schemas.video import (
     StoryboardResponse,
     VideoGenerateRequest,

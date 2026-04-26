@@ -70,9 +70,7 @@ class VideoService:
         return clip_path
 
     def concatenate_clips(self, clip_paths: list[str], output_path: str) -> str:
-        filelist = tempfile.NamedTemporaryFile(
-            mode="w", suffix=".txt", delete=False
-        )
+        filelist = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False)
         try:
             for path in clip_paths:
                 filelist.write(f"file '{path}'\n")
@@ -83,10 +81,14 @@ class VideoService:
                 subprocess.run(
                     [
                         "ffmpeg",
-                        "-f", "concat",
-                        "-safe", "0",
-                        "-i", filelist.name,
-                        "-c", "copy",
+                        "-f",
+                        "concat",
+                        "-safe",
+                        "0",
+                        "-i",
+                        filelist.name,
+                        "-c",
+                        "copy",
                         output_path,
                         "-y",
                     ],
