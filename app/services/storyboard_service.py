@@ -33,18 +33,19 @@ _SYSTEM_PROMPT = (
     "    }\n"
     "  ]\n"
     "}\n\n"
-    "Prompt structure: [Subject motion] + [Camera movement] + [Environmental"
-    " effects] + [Speed/intensity modifier].\n\n"
-    "Subject motion — how the product itself moves: rotates clockwise, tilts"
-    " gently, sways, gleams, pulses with light.\n"
-    "Camera movement — ONE move only: slow dolly in, counterclockwise orbit,"
-    " pedestal up, slow pan, rack focus pull.\n"
-    "Environmental effects — adds dynamism (ALWAYS include at least one):"
-    " fine light particles drift upward, soft mist rises, bokeh orbs pulse,"
-    " rim light sweeps across surface, reflections shimmer and shift, fabric"
-    " ripples, liquid swirls.\n"
-    "Speed modifier: slow and fluid / smooth and continuous / gentle and organic.\n\n"
-    "Rules: ALWAYS include all three motion layers. ONE camera move per scene."
+    "Prompt structure: [Subject motion] + [Camera movement] + [Subtle natural"
+    " effect (optional)] + [Speed modifier].\n\n"
+    "Subject motion — how the product itself moves: rotates slowly, tilts"
+    " slightly, stays still while camera moves.\n"
+    "Camera movement — ONE move only: slow dolly in, slow orbit, slow pedestal"
+    " up, slow pan, rack focus pull.\n"
+    "Subtle natural effect (optional, only when grounded in reality) — things"
+    " that happen naturally on set: highlight glides across a glossy surface,"
+    " shadow shifts as the camera angle changes, a nearby prop sways gently,"
+    " shallow depth of field breathes slightly. AVOID fantasy effects such as"
+    " floating particles, magical mist, or pulsing bokeh.\n"
+    "Speed modifier: slow and fluid / smooth and continuous / gentle.\n\n"
+    "Rules: ONE camera move per scene. Keep effects realistic and subtle."
     " NEVER describe color, shape, or appearance. 40-80 words, English only."
 )
 
@@ -56,10 +57,10 @@ _TEMPLATE_SCENES = [
         visual_description="Product surface texture in extreme detail",
         duration_seconds=5,
         prompt=(
-            "The product surface slowly rotates, revealing fine texture detail."
-            " Camera drifts forward at a glacial pace, closing in on the surface."
-            " A soft shimmer sweeps slowly across the surface from left to right."
-            " Smooth and fluid motion, slow pace."
+            "The product surface slowly rotates, bringing fine texture detail into"
+            " frame. Camera drifts forward at a glacial pace."
+            " A highlight glides slowly across the glossy surface as the angle shifts."
+            " Smooth and fluid motion."
         ),
     ),
     VideoScene(
@@ -70,9 +71,9 @@ _TEMPLATE_SCENES = [
         duration_seconds=6,
         prompt=(
             "The product rotates clockwise on its base, slowly revealing all sides."
-            " Camera performs a slow counterclockwise orbit around the product."
-            " Soft reflections shimmer and shift across the surface as the angle"
-            " changes. Smooth and continuous motion at slow pace."
+            " Camera performs a slow counterclockwise orbit."
+            " Surface reflections shift naturally as the viewing angle changes."
+            " Smooth and continuous motion."
         ),
     ),
     VideoScene(
@@ -83,9 +84,8 @@ _TEMPLATE_SCENES = [
         duration_seconds=5,
         prompt=(
             "The product stands still as the camera slowly rises from ground level"
-            " to eye level. Fine light particles drift upward from below the product."
-            " A rim light sweeps gently around the product edges, creating a shifting"
-            " halo. Slow and majestic motion."
+            " to eye level. The shadow cast by the product shrinks as the camera"
+            " climbs. Slow and steady motion."
         ),
     ),
     VideoScene(
@@ -97,8 +97,8 @@ _TEMPLATE_SCENES = [
         prompt=(
             "Camera slowly pushes in while rack focus pulls from background to the"
             " product label, which transitions from blurred to tack-sharp."
-            " Background bokeh orbs slowly pulse and drift out of frame."
-            " A gentle gleam sweeps across the label surface. Slow, intimate motion."
+            " The background gradually softens into smooth bokeh."
+            " Slow and intimate motion."
         ),
     ),
     VideoScene(
@@ -109,10 +109,9 @@ _TEMPLATE_SCENES = [
         duration_seconds=6,
         prompt=(
             "Camera drifts slowly from left to right across the scene."
-            " Nearby fabric or foliage sways gently in a soft breeze."
-            " Warm light shifts subtly, casting moving shadows across the surface."
-            " Fine dust particles float through the light beam in the foreground."
-            " Gentle and organic motion."
+            " A nearby fabric prop sways gently as if caught in a soft breeze."
+            " Warm light shifts slightly, moving the shadow edges across the surface."
+            " Gentle and natural motion."
         ),
     ),
 ]
