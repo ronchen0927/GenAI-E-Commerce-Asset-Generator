@@ -62,7 +62,7 @@ class TestGenerateClip:
 
             service = VideoService(
                 replicate_token="test-token",
-                video_model="minimax/video-01",
+                video_model="wan-video/wan-2.2-i2v-fast",
             )
             result_path = await service.generate_clip(
                 image_path=sample_image_path,
@@ -91,7 +91,7 @@ class TestGenerateClip:
             )
             service = VideoService(
                 replicate_token="test-token",
-                video_model="minimax/video-01",
+                video_model="wan-video/wan-2.2-i2v-fast",
             )
             with pytest.raises(Exception, match="Replicate error"):
                 await service.generate_clip(
@@ -115,8 +115,15 @@ class TestConcatenateClips:
         mock_ffmpeg = MagicMock(returncode=0)
 
         with patch("app.services.video_service.subprocess.run") as mock_run:
-            mock_run.side_effect = [mock_ffprobe, mock_ffprobe, mock_ffprobe, mock_ffmpeg]
-            service = VideoService(replicate_token="test-token", video_model="minimax/video-01")
+            mock_run.side_effect = [
+                mock_ffprobe,
+                mock_ffprobe,
+                mock_ffprobe,
+                mock_ffmpeg,
+            ]
+            service = VideoService(
+                replicate_token="test-token", video_model="wan-video/wan-2.2-i2v-fast"
+            )
             result = service.concatenate_clips(clip_paths, output_path)
 
         assert result == output_path
@@ -133,7 +140,9 @@ class TestConcatenateClips:
 
         with patch("app.services.video_service.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
-            service = VideoService(replicate_token="test-token", video_model="minimax/video-01")
+            service = VideoService(
+                replicate_token="test-token", video_model="wan-video/wan-2.2-i2v-fast"
+            )
             result = service.concatenate_clips(clip_paths, output_path)
 
         assert result == output_path
@@ -152,7 +161,7 @@ class TestConcatenateClips:
             )
             service = VideoService(
                 replicate_token="test-token",
-                video_model="minimax/video-01",
+                video_model="wan-video/wan-2.2-i2v-fast",
             )
             with pytest.raises(VideoServiceError, match="FFmpeg"):
                 service.concatenate_clips(clip_paths, output_path)

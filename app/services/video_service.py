@@ -30,9 +30,13 @@ def _is_rate_limit(exc: Exception) -> bool:
 def _get_clip_duration(clip_path: str) -> float:
     result = subprocess.run(
         [
-            "ffprobe", "-v", "quiet",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
             clip_path,
         ],
         capture_output=True,
@@ -66,7 +70,7 @@ def _build_input(
             with open(last_frame_path, "rb") as f:
                 inp["last_image"] = io.BytesIO(f.read())
         return inp
-    # minimax/video-01 and compatible models
+    # wan-video/wan-2.2-i2v-fast and compatible models
     return {
         "prompt": scene.prompt,
         "first_frame_image": io.BytesIO(img_bytes),
@@ -138,10 +142,14 @@ class VideoService:
             subprocess.run(
                 [
                     "ffmpeg",
-                    "-sseof", "-1",
-                    "-i", clip_path,
-                    "-vframes", "1",
-                    "-update", "1",
+                    "-sseof",
+                    "-1",
+                    "-i",
+                    clip_path,
+                    "-vframes",
+                    "1",
+                    "-update",
+                    "1",
                     output_path,
                     "-y",
                 ],
@@ -199,8 +207,10 @@ class VideoService:
                 [
                     "ffmpeg",
                     *inputs,
-                    "-filter_complex", ";".join(filter_parts),
-                    "-map", "[vout]",
+                    "-filter_complex",
+                    ";".join(filter_parts),
+                    "-map",
+                    "[vout]",
                     output_path,
                     "-y",
                 ],
@@ -223,10 +233,17 @@ class VideoService:
             try:
                 subprocess.run(
                     [
-                        "ffmpeg", "-f", "concat", "-safe", "0",
-                        "-i", filelist.name,
-                        "-c", "copy",
-                        output_path, "-y",
+                        "ffmpeg",
+                        "-f",
+                        "concat",
+                        "-safe",
+                        "0",
+                        "-i",
+                        filelist.name,
+                        "-c",
+                        "copy",
+                        output_path,
+                        "-y",
                     ],
                     check=True,
                     capture_output=True,
