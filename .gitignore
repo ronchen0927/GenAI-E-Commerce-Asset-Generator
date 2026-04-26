@@ -105,3 +105,6 @@ models/
 # GCP credentials (never commit!)
 *credentials*.json
 *service-account*.json
+
+# Git worktrees
+.worktrees/
