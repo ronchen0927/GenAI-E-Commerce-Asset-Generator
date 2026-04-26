@@ -1,7 +1,7 @@
 """Video generation service: Replicate image-to-video and FFmpeg concatenation."""
 
+import io
 import logging
-import os
 from pathlib import Path
 
 import httpx
@@ -28,18 +28,19 @@ class VideoService:
         output_dir: str,
         clip_index: int,
     ) -> str:
-        os.environ["REPLICATE_API_TOKEN"] = self._replicate_token
         rep_client = replicate.Client(api_token=self._replicate_token)  # type: ignore[attr-defined]
 
-        with open(image_path, "rb") as img_file:
-            output_url = await rep_client.async_run(
-                self._video_model,
-                input={
-                    "prompt": scene.prompt,
-                    "first_frame_image": img_file,
-                    "duration": scene.duration_seconds,
-                },
-            )
+        with open(image_path, "rb") as f:
+            img_bytes = f.read()
+
+        output_url = await rep_client.async_run(
+            self._video_model,
+            input={
+                "prompt": scene.prompt,
+                "first_frame_image": io.BytesIO(img_bytes),
+                "duration": scene.duration_seconds,
+            },
+        )
 
         if isinstance(output_url, list):
             output_url = str(output_url[0])
@@ -48,7 +49,16 @@ class VideoService:
 
         async with httpx.AsyncClient(timeout=120.0) as http_client:
             response = await http_client.get(output_url)
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError:
+                logger.error(
+                    "Failed to download clip %d from %s (status %d)",
+                    clip_index,
+                    output_url,
+                    response.status_code,
+                )
+                raise
 
             clip_path = str(Path(output_dir) / f"clip_{clip_index:02d}.mp4")
             with open(clip_path, "wb") as f:
