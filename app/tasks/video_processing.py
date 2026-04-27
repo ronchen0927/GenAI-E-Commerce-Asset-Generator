@@ -76,16 +76,18 @@ async def _process_video_async(
 
         for i, scene in enumerate(scenes):
             try:
+                # i2v chaining: subsequent clips start from the last frame of the
+                # previous clip so the video flows continuously instead of
+                # resetting to the product image every scene.
+                current_image = last_frame_path if last_frame_path else str(local_image)
                 clip_path = await video_service.generate_clip(
-                    image_path=str(local_image),
+                    image_path=current_image,
                     scene=scene,
                     output_dir=str(clips_dir),
                     clip_index=i,
-                    last_frame_path=last_frame_path,
                 )
                 successful_clips.append(clip_path)
 
-                # Extract last frame to condition the next clip's starting point
                 next_last_frame = str(clips_dir / f"last_frame_{i:02d}.png")
                 try:
                     video_service.extract_last_frame(clip_path, next_last_frame)

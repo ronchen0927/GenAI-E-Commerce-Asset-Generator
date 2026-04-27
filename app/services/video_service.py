@@ -54,22 +54,17 @@ def _build_input(
     model: str,
     img_bytes: bytes,
     scene: "VideoScene",
-    last_frame_path: str | None = None,
 ) -> dict[str, Any]:
     """Build Replicate input dict for the configured video model."""
     if "wan" in model.lower():
         fps = 16
         num_frames = max(81, min(121, round(scene.duration_seconds * fps)))
-        inp: dict[str, Any] = {
+        return {
             "prompt": scene.prompt,
             "image": io.BytesIO(img_bytes),
             "num_frames": num_frames,
             "frames_per_second": fps,
         }
-        if last_frame_path:
-            with open(last_frame_path, "rb") as f:
-                inp["last_image"] = io.BytesIO(f.read())
-        return inp
     # wan-video/wan-2.2-i2v-fast and compatible models
     return {
         "prompt": scene.prompt,
@@ -88,7 +83,6 @@ class VideoService:
         scene: VideoScene,
         output_dir: str,
         clip_index: int,
-        last_frame_path: str | None = None,
     ) -> str:
         rep_client = replicate.Client(api_token=self._replicate_token)  # type: ignore[attr-defined]
 
@@ -100,9 +94,7 @@ class VideoService:
             try:
                 raw = await rep_client.async_run(
                     self._video_model,
-                    input=_build_input(
-                        self._video_model, img_bytes, scene, last_frame_path
-                    ),
+                    input=_build_input(self._video_model, img_bytes, scene),
                 )
                 break
             except Exception as exc:
@@ -137,7 +129,7 @@ class VideoService:
         return clip_path
 
     def extract_last_frame(self, clip_path: str, output_path: str) -> None:
-        """Extract the last frame of a clip as a PNG for last_image conditioning."""
+        """Extract the last frame of a clip as a PNG for i2v chaining."""
         try:
             subprocess.run(
                 [
