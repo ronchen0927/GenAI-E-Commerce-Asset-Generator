@@ -25,6 +25,83 @@ wheels = [
 ]
 
 [[package]]
+name = "ai-ecommerce-media-studio"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "accelerate" },
+    { name = "celery" },
+    { name = "diffusers" },
+    { name = "fastapi" },
+    { name = "flower" },
+    { name = "gguf" },
+    { name = "google-cloud-storage" },
+    { name = "httpx" },
+    { name = "huggingface-hub", extra = ["hf-xet"] },
+    { name = "numpy" },
+    { name = "openai" },
+    { name = "pillow" },
+    { name = "pydantic-settings" },
+    { name = "python-jose", extra = ["cryptography"] },
+    { name = "python-multipart" },
+    { name = "redis" },
+    { name = "replicate" },
+    { name = "safetensors" },
+    { name = "scikit-image" },
+    { name = "sentencepiece" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "transformers" },
+    { name = "uvicorn" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "accelerate", specifier = ">=0.27.0" },
+    { name = "celery", specifier = ">=5.3.6" },
+    { name = "diffusers", specifier = ">=0.31.0" },
+    { name = "fastapi", specifier = ">=0.109.0" },
+    { name = "flower", specifier = ">=2.0.1" },
+    { name = "gguf", specifier = ">=0.6.0" },
+    { name = "google-cloud-storage", specifier = ">=2.14.0" },
+    { name = "httpx", specifier = ">=0.26.0" },
+    { name = "huggingface-hub", extras = ["hf-xet"], specifier = ">=0.36.2" },
+    { name = "numpy", specifier = ">=1.26.0" },
+    { name = "openai", specifier = ">=1.0.0" },
+    { name = "pillow", specifier = ">=10.2.0" },
+    { name = "pydantic-settings", specifier = ">=2.1.0" },
+    { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5.0" },
+    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "redis", specifier = ">=5.0.1" },
+    { name = "replicate", specifier = ">=1.0.7" },
+    { name = "safetensors", specifier = ">=0.4.0" },
+    { name = "scikit-image", specifier = ">=0.22.0" },
+    { name = "sentencepiece", specifier = ">=0.2.0" },
+    { name = "torch", specifier = ">=2.2.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "torchvision", specifier = ">=0.17.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "transformers" },
+    { name = "uvicorn", specifier = ">=0.27.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.8.0" },
+    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
+    { name = "ruff", specifier = ">=0.1.14" },
+]
+
+[[package]]
 name = "amqp"
 version = "5.3.1"
 source = { registry = "https://pypi.org/simple/" }
@@ -387,83 +464,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/1f/924e3caae75f471eae4b26bd13b698f6af2c44279f67af317439c2f4c46a/ecdsa-0.19.1.tar.gz", hash = "sha256:478cba7b62555866fcb3bb3fe985e06decbdb68ef55713c4e5ab98c57d508e61", size = 201793 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/a3/460c57f094a4a165c84a1341c373b0a4f5ec6ac244b998d5021aade89b77/ecdsa-0.19.1-py2.py3-none-any.whl", hash = "sha256:30638e27cf77b7e15c4c4cc1973720149e1033827cfd00661ca5c8cc0cdb24c3", size = 150607 },
-]
-
-[[package]]
-name = "ecommerce-visual-pro"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "accelerate" },
-    { name = "celery" },
-    { name = "diffusers" },
-    { name = "fastapi" },
-    { name = "flower" },
-    { name = "gguf" },
-    { name = "google-cloud-storage" },
-    { name = "httpx" },
-    { name = "huggingface-hub", extra = ["hf-xet"] },
-    { name = "numpy" },
-    { name = "openai" },
-    { name = "pillow" },
-    { name = "pydantic-settings" },
-    { name = "python-jose", extra = ["cryptography"] },
-    { name = "python-multipart" },
-    { name = "redis" },
-    { name = "replicate" },
-    { name = "safetensors" },
-    { name = "scikit-image" },
-    { name = "sentencepiece" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "transformers" },
-    { name = "uvicorn" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "accelerate", specifier = ">=0.27.0" },
-    { name = "celery", specifier = ">=5.3.6" },
-    { name = "diffusers", specifier = ">=0.31.0" },
-    { name = "fastapi", specifier = ">=0.109.0" },
-    { name = "flower", specifier = ">=2.0.1" },
-    { name = "gguf", specifier = ">=0.6.0" },
-    { name = "google-cloud-storage", specifier = ">=2.14.0" },
-    { name = "httpx", specifier = ">=0.26.0" },
-    { name = "huggingface-hub", extras = ["hf-xet"], specifier = ">=0.36.2" },
-    { name = "numpy", specifier = ">=1.26.0" },
-    { name = "openai", specifier = ">=1.0.0" },
-    { name = "pillow", specifier = ">=10.2.0" },
-    { name = "pydantic-settings", specifier = ">=2.1.0" },
-    { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5.0" },
-    { name = "python-multipart", specifier = ">=0.0.9" },
-    { name = "redis", specifier = ">=5.0.1" },
-    { name = "replicate", specifier = ">=1.0.7" },
-    { name = "safetensors", specifier = ">=0.4.0" },
-    { name = "scikit-image", specifier = ">=0.22.0" },
-    { name = "sentencepiece", specifier = ">=0.2.0" },
-    { name = "torch", specifier = ">=2.2.0", index = "https://download.pytorch.org/whl/cu124" },
-    { name = "torchvision", specifier = ">=0.17.0", index = "https://download.pytorch.org/whl/cu124" },
-    { name = "transformers" },
-    { name = "uvicorn", specifier = ">=0.27.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.8.0" },
-    { name = "pre-commit", specifier = ">=4.5.1" },
-    { name = "pytest", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23.0" },
-    { name = "ruff", specifier = ">=0.1.14" },
 ]
 
 [[package]]
