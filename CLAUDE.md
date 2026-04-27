@@ -102,5 +102,5 @@ GitHub Actions (`.github/workflows/ci.yml`): **Lint & type check → Unit tests 
 Production deploy via Google Cloud Build → Cloud Run:
 ```bash
 gcloud builds submit --config deploy/cloudbuild.yaml \
-  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ai-ecommerce-media-studio
 ```

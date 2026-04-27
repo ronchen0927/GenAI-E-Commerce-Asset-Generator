@@ -89,6 +89,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: ecommerce-visual-pro:${{ github.sha }}
+          tags: ai-ecommerce-media-studio:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

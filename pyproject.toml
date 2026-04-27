@@ -1,7 +1,7 @@
 [project]
-name = "ecommerce-visual-pro"
+name = "ai-ecommerce-media-studio"
 version = "0.1.0"
-description = "AI-powered e-commerce product photo optimization"
+description = "AI-powered e-commerce media generation platform for images and videos"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

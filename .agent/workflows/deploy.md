@@ -51,10 +51,10 @@ git push origin main
 3. **建立或選擇 GCP Project**
    ```bash
    # 建立新 project（或用現有的）
-   gcloud projects create ecommerce-visual-pro --name="Ecommerce Visual Pro"
+   gcloud projects create ai-ecommerce-media-studio --name="AI E-Commerce Media Studio"
    
    # 設定為預設 project
-   gcloud config set project ecommerce-visual-pro
+   gcloud config set project ai-ecommerce-media-studio
    ```
 
 4. **啟用必要的 API**
@@ -94,7 +94,7 @@ git push origin main
 ```bash
 # 從專案根目錄執行
 gcloud builds submit --config deploy/cloudbuild.yaml \
-  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ai-ecommerce-media-studio
 ```
 
 這會自動執行：Build Docker image → Push to Artifact Registry → Deploy to Cloud Run
@@ -103,7 +103,7 @@ gcloud builds submit --config deploy/cloudbuild.yaml \
 
 ```bash
 # 直接從 source 部署（Cloud Run 會自動 build）
-gcloud run deploy ecommerce-visual-pro \
+gcloud run deploy ai-ecommerce-media-studio \
   --source . \
   --region asia-east1 \
   --allow-unauthenticated \
@@ -125,7 +125,7 @@ gcloud secrets add-iam-policy-binding replicate-api-token \
   --role="roles/secretmanager.secretAccessor"
 
 # 3. 更新 Cloud Run service 掛載 secret
-gcloud run services update ecommerce-visual-pro \
+gcloud run services update ai-ecommerce-media-studio \
   --region asia-east1 \
   --set-secrets=REPLICATE_API_TOKEN=replicate-api-token:latest
 ```
@@ -134,7 +134,7 @@ gcloud run services update ecommerce-visual-pro \
 
 ```bash
 # 取得 service URL
-gcloud run services describe ecommerce-visual-pro \
+gcloud run services describe ai-ecommerce-media-studio \
   --region asia-east1 \
   --format='value(status.url)'
 
@@ -152,7 +152,7 @@ curl https://YOUR_SERVICE_URL/health
 2. GitHub Actions 自動跑 CI（lint + test + docker build）
 3. CI 通過後，手動觸發部署：
    gcloud builds submit --config deploy/cloudbuild.yaml \
-     --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+     --substitutions=_REGION=asia-east1,_SERVICE_NAME=ai-ecommerce-media-studio
 4. 到 Cloud Run console 確認部署成功
 ```
 
@@ -174,4 +174,4 @@ curl https://YOUR_SERVICE_URL/health
 ### 如果只是面試 Demo
 - 不需要真的部署
 - 用 `gcloud run deploy --source .` 跑一次證明可以就夠了
-- 然後 `gcloud run services delete ecommerce-visual-pro` 刪掉省錢
+- 然後 `gcloud run services delete ai-ecommerce-media-studio` 刪掉省錢

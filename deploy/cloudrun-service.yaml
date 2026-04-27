@@ -9,12 +9,12 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: ecommerce-asset-generator
+  name: ai-ecommerce-media-studio
   labels:
-    app: ecommerce-asset-generator
+    app: ai-ecommerce-media-studio
     managed-by: cloud-run
   annotations:
-    run.googleapis.com/description: "AI-powered e-commerce product photo optimization"
+    run.googleapis.com/description: "AI-powered e-commerce media generation platform for images and videos"
     run.googleapis.com/ingress: all
     run.googleapis.com/launch-stage: GA
 spec:
@@ -32,7 +32,7 @@ spec:
       timeoutSeconds: 300
       serviceAccountName: ""  # Uses default compute service account
       containers:
-        - image: asia-east1-docker.pkg.dev/ecommerce-visual-pro/cloud-run-source-deploy/ecommerce-asset-generator:latest
+        - image: asia-east1-docker.pkg.dev/ai-ecommerce-media-studio/cloud-run-source-deploy/ai-ecommerce-media-studio:latest
           ports:
             - containerPort: 8000
           resources:
@@ -58,9 +58,9 @@ spec:
             - name: STORAGE_TYPE
               value: "gcs"
             - name: GCS_BUCKET_NAME
-              value: "ecommerce-visual-pro-assets"
+              value: "ai-ecommerce-media-studio-assets"
             - name: GCS_PROJECT_ID
-              value: "ecommerce-visual-pro"
+              value: "ai-ecommerce-media-studio"
             - name: AUTH_ENABLED
               value: "true"
             - name: RATE_LIMIT_ENABLED

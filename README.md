@@ -1,7 +1,7 @@
-# Ecommerce Visual Pro
+# AI E-Commerce Media Studio
 
-AI-powered e-commerce product photo optimization microservice.
-Upload a product photo → get a professionally edited result in seconds.
+AI-powered e-commerce media generation platform for images and videos.
+Upload a product photo → get a professionally edited image or a cinematic product video in seconds.
 
 ## ✨ What It Does
 
@@ -248,7 +248,7 @@ Production deployment uses **Google Cloud Build** → **Cloud Run**:
 ```bash
 # Deploy to Cloud Run (from local or CI)
 gcloud builds submit --config deploy/cloudbuild.yaml \
-  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ecommerce-visual-pro
+  --substitutions=_REGION=asia-east1,_SERVICE_NAME=ai-ecommerce-media-studio
 
 # Or apply the declarative service config directly
 gcloud run services replace deploy/cloudrun-service.yaml --region=asia-east1

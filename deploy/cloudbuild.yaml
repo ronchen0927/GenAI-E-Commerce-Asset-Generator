@@ -12,7 +12,7 @@
 
 substitutions:
   _REGION: asia-east1
-  _SERVICE_NAME: ecommerce-asset-generator
+  _SERVICE_NAME: ai-ecommerce-media-studio
   _TAG: latest  # Overridden by CI trigger with SHORT_SHA
 
 steps:
@@ -48,7 +48,7 @@ steps:
       - --cpu=1
       - --timeout=300s
       - --max-instances=3
-      - --set-env-vars=STORAGE_TYPE=gcs,GCS_BUCKET_NAME=ecommerce-visual-pro-assets,GCS_PROJECT_ID=${PROJECT_ID},AUTH_ENABLED=true,RATE_LIMIT_ENABLED=true,API_KEYS=ecommerce-demo-key-2026
+      - --set-env-vars=STORAGE_TYPE=gcs,GCS_BUCKET_NAME=ai-ecommerce-media-studio-assets,GCS_PROJECT_ID=${PROJECT_ID},AUTH_ENABLED=true,RATE_LIMIT_ENABLED=true,API_KEYS=ai-media-studio-key-2026
       - --set-secrets=REPLICATE_API_TOKEN=replicate-token:latest,CELERY_BROKER_URL=celery-broker-url:latest,CELERY_RESULT_BACKEND=celery-broker-url:latest
 
 images:

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Application
-    app_name: str = "Ecommerce Visual Pro"
+    app_name: str = "AI E-Commerce Media Studio"
     debug: bool = False
 
     # Storage
